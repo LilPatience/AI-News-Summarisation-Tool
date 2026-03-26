@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI News Summariser</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Source+Serif+4:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            background: #0a0a0c;
+            color: #e4e4e7;
+            font-family: 'Syne', sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .grain {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.03; pointer-events: none; z-index: 100;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
+
+        .glow-orb {
+            position: fixed; width: 600px; height: 600px; border-radius: 50%;
+            filter: blur(120px); opacity: 0.07; pointer-events: none; z-index: 0;
+            transition: background 1s ease;
+        }
+        .glow-orb.top { top: -200px; left: -200px; background: #6366f1; }
+        .glow-orb.bottom { bottom: -300px; right: -200px; background: #0ea5e9; }
+
+        .container {
+            position: relative; z-index: 1; max-width: 900px;
+            margin: 0 auto; padding: 0 24px;
+        }
+
+        header { padding-top: 64px; padding-bottom: 40px; }
+
+        .header-top {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; margin-bottom: 32px;
+        }
+
+        .label {
+            font-size: 13px; color: #52525b; font-weight: 600;
+            letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 8px;
+        }
+
+        h1 {
+            font-size: 42px; font-weight: 800; letter-spacing: -0.03em;
+            line-height: 1.1; color: #fafafa;
+        }
+
+        .subtitle {
+            font-size: 16px; color: #71717a; margin-top: 8px; font-weight: 400;
+        }
+
+        .date-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px; border-radius: 100px; font-size: 12px;
+            background: rgba(255,255,255,0.04); color: #71717a;
+            border: 1px solid rgba(255,255,255,0.06);
+            font-weight: 500; letter-spacing: 0.03em; white-space: nowrap;
+        }
+
+        .categories { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .cat-btn {
+            padding: 10px 20px; border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03); border-radius: 100px;
+            color: #a1a1aa; font-family: 'Syne', sans-serif; font-size: 14px;
+            font-weight: 500; cursor: pointer; transition: all 0.3s ease;
+            backdrop-filter: blur(10px); letter-spacing: 0.02em;
+        }
+        .cat-btn:hover {
+            border-color: rgba(255,255,255,0.2); color: #e4e4e7;
+            background: rgba(255,255,255,0.06); transform: translateY(-1px);
+        }
+        .cat-btn.active {
+            color: #fff;
+        }
+
+        .header-rule {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 20%, rgba(255,255,255,0.08) 80%, transparent);
+        }
+
+        .content { padding-bottom: 80px; }
+
+        .empty-state {
+            text-align: center; padding: 80px 20px;
+            font-size: 14px; color: #3f3f46;
+        }
+
+        .loading {
+            display: flex; justify-content: center; padding: 80px 20px;
+        }
+
+        .loader {
+            width: 24px; height: 24px; border: 2px solid rgba(255,255,255,0.1);
+            border-top-color: rgba(255,255,255,0.5); border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-state {
+            text-align: center; padding: 60px 20px;
+            font-size: 14px; color: #71717a;
+        }
+
+        .section-label {
+            padding: 20px 32px; font-size: 12px; color: #52525b;
+            font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+        }
+
+        .article-card {
+            padding: 28px 32px; border-bottom: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.3s ease; position: relative;
+            animation: fadeUp 0.5s ease forwards; opacity: 0;
+        }
+        .article-card:hover { background: rgba(255,255,255,0.02); }
+        .article-card:last-child { border-bottom: none; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .article-num {
+            font-family: 'Syne', sans-serif; font-size: 48px; font-weight: 800;
+            color: rgba(255,255,255,0.04); position: absolute; right: 32px; top: 20px;
+            line-height: 1;
+        }
+
+        .article-source {
+            font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em;
+            color: #71717a; font-weight: 600; margin-bottom: 8px;
+        }
+
+        .article-title {
+            font-family: 'Source Serif 4', serif; font-size: 20px; font-weight: 400;
+            color: #fafafa; line-height: 1.4; margin-bottom: 12px; max-width: 85%;
+        }
+
+        .article-summary {
+            font-size: 14px; line-height: 1.7; color: #a1a1aa;
+            max-width: 80%; margin-bottom: 16px;
+        }
+
+        .article-link {
+            font-size: 12px; color: #71717a; text-decoration: none;
+            font-weight: 500; letter-spacing: 0.05em; transition: color 0.2s;
+            display: inline-flex; align-items: center; gap: 6px;
+        }
+        .article-link:hover { color: #e4e4e7; }
+
+        .footer {
+            border-top: 1px solid rgba(255,255,255,0.05); padding: 24px 0;
+            text-align: center; font-size: 11px; color: #3f3f46; letter-spacing: 0.05em;
+        }
+
+        @media (max-width: 600px) {
+            h1 { font-size: 28px; }
+            .header-top { flex-direction: column; gap: 16px; }
+            .article-card { padding: 20px 16px; }
+            .article-num { display: none; }
+            .article-title { max-width: 100%; font-size: 18px; }
+            .article-summary { max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="grain"></div>
+    <div class="glow-orb top" id="glowTop"></div>
+    <div class="glow-orb bottom" id="glowBottom"></div>
+
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <div>
+                    <p class="label">AI News Summariser</p>
+                    <h1 id="greeting"></h1>
+                    <p class="subtitle">Select a topic to read today's summarised headlines.</p>
+                </div>
+                <div class="date-pill" id="datePill"></div>
+            </div>
+            <div class="categories" id="categories"></div>
+        </header>
+
+        <div class="header-rule"></div>
+
+        <div class="content" id="content">
+            <div class="empty-state">&uarr; Choose a category to get started</div>
+        </div>
+
+        <div class="footer">
+            Built with Python &middot; MongoDB &middot; Gemini Flash &middot; Sentence Transformers
+        </div>
+    </div>
+
+    <script>
+        // IMPORTANT: Update this URL to your Render API URL
+        const API_BASE = "https://ai-news-summarisation-tool.onrender.com";
+
+        const CATEGORIES = [
+            { id: "Technology", accent: "#0ea5e9" },
+            { id: "Politics", accent: "#8b5cf6" },
+            { id: "Business", accent: "#10b981" },
+            { id: "Science", accent: "#f59e0b" },
+            { id: "Sports", accent: "#ef4444" },
+            { id: "Health", accent: "#ec4899" },
+            { id: "Entertainment", accent: "#6366f1" },
+            { id: "World News", accent: "#14b8a6" },
+        ];
+
+        let selectedCategory = null;
+
+        // Set greeting based on time of day
+        function updateGreeting() {
+            const h = new Date().getHours();
+            const greeting = h < 12 ? "Good morning" : h < 18 ? "Good afternoon" : "Good evening";
+            document.getElementById("greeting").textContent = greeting + ".";
+        }
+
+        // Set current date
+        function updateDate() {
+            const now = new Date();
+            const options = { weekday: "short", day: "numeric", month: "short" };
+            document.getElementById("datePill").textContent = now.toLocaleDateString("en-GB", options);
+        }
+
+        // Render category buttons
+        function renderCategories() {
+            const container = document.getElementById("categories");
+            CATEGORIES.forEach(cat => {
+                const btn = document.createElement("button");
+                btn.className = "cat-btn";
+                btn.textContent = cat.id;
+                btn.dataset.accent = cat.accent;
+                btn.addEventListener("click", () => fetchArticles(cat.id, cat.accent));
+                container.appendChild(btn);
+            });
+        }
+
+        // Format date string
+        function formatDate(dateStr) {
+            if (!dateStr) return "";
+            try {
+                const d = new Date(dateStr);
+                return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+            } catch {
+                return dateStr;
+            }
+        }
+
+        // Fetch articles from API
+        async function fetchArticles(category, accent) {
+            selectedCategory = category;
+
+            // Update button states
+            document.querySelectorAll(".cat-btn").forEach(btn => {
+                if (btn.textContent === category) {
+                    btn.classList.add("active");
+                    btn.style.borderColor = accent;
+                    btn.style.background = accent + "26";
+                    btn.style.boxShadow = `0 0 20px ${accent}33`;
+                } else {
+                    btn.classList.remove("active");
+                    btn.style.borderColor = "";
+                    btn.style.background = "";
+                    btn.style.boxShadow = "";
+                }
+            });
+
+            // Update glow orbs
+            document.getElementById("glowTop").style.background = accent;
+            document.getElementById("glowBottom").style.background = accent;
+
+            // Show loading
+            const content = document.getElementById("content");
+            content.innerHTML = '<div class="loading"><div class="loader"></div></div>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/articles?category=${encodeURIComponent(category)}&limit=5`);
+                if (!res.ok) throw new Error("Failed to fetch");
+                const data = await res.json();
+                const articles = data.articles || [];
+
+                if (articles.length === 0) {
+                    content.innerHTML = '<div class="error-state">No articles found for this category yet.</div>';
+                    return;
+                }
+
+                let html = `<div class="section-label">${category} — Top ${articles.length} articles</div>`;
+
+                articles.forEach((article, i) => {
+                    const delay = i * 0.08;
+                    html += `
+                        <div class="article-card" style="animation-delay: ${delay}s">
+                            <div class="article-num">${String(i + 1).padStart(2, "0")}</div>
+                            <div class="article-source">
+                                ${article.source || "Unknown source"} &middot; ${formatDate(article.published_at)}
+                            </div>
+                            <h2 class="article-title">${article.title || "Untitled"}</h2>
+                            ${article.summary ? `<p class="article-summary">${article.summary}</p>` : ""}
+                            ${article.url ? `<a class="article-link" href="${article.url}" target="_blank" rel="noopener noreferrer">Read original article &rarr;</a>` : ""}
+                        </div>
+                    `;
+                });
+
+                content.innerHTML = html;
+
+            } catch (err) {
+                content.innerHTML = '<div class="error-state">Could not connect to the API. Make sure the backend is running.</div>';
+            }
+        }
+
+        // Initialise
+        updateGreeting();
+        updateDate();
+        renderCategories();
+
+        // Update greeting every minute
+        setInterval(updateGreeting, 60000);
+    </script>
+</body>
+</html>
