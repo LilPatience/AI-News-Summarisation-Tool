@@ -1,0 +1,8 @@
+pymongo
+python-dotenv
+requests
+sentence-transformers
+scikit-learn
+numpy
+google-generativeai
+schedule
