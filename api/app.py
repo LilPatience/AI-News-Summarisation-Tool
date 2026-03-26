@@ -96,24 +96,24 @@ def get_articles():
 def get_categories():
     """
     Get all available categories and how many articles are in each.
-
-    Returns:
-        JSON with category names and article counts
     """
-    pipeline = [
-        {"$match": {"category": {"$exists": True, "$ne": ""}}},
-        {"$group": {"_id": "$category", "count": {"$sum": 1}}},
-        {"$sort": {"count": -1}}
-    ]
+    try:
+        pipeline = [
+            {"$match": {"category": {"$exists": True, "$ne": ""}}},
+            {"$group": {"_id": "$category", "count": {"$sum": 1}}},
+            {"$sort": {"count": -1}}
+        ]
 
-    results = list(articles_collection.aggregate(pipeline))
+        results = list(articles_collection.aggregate(pipeline))
 
-    categories = [
-        {"name": r["_id"], "count": r["count"]}
-        for r in results
-    ]
+        categories = [
+            {"name": str(r["_id"]), "count": r["count"]}
+            for r in results
+        ]
 
-    return jsonify({"categories": categories})
+        return jsonify({"categories": categories})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/api/stats")
