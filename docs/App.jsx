@@ -11,7 +11,7 @@ const CATEGORIES = [
   { id: "World News", icon: "◆", accent: "#14b8a6" },
 ];
 
-// IMPORTANT: Update this URL after deploying your Flask API to Render
+//Update this URL after deploying your Flask API to Render
 const API_BASE = "https://ai-news-summarisation-tool.onrender.com";
 
 export default function App() {

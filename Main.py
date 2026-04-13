@@ -1,14 +1,13 @@
-"""
-main.py - Daily pipeline for AI News Summariser
 
-Orchestrates the entire daily workflow:
-1. Archive old articles (>24 hours) to the warehouse
-2. Collect new articles from all 3 news APIs
-3. Categorise new articles using sentence-transformers
-4. Summarise new articles using Gemini Flash
+#main.py - Daily pipeline for AI News Summariser
 
-Can be run manually or left running for automatic daily execution.
-"""
+#Orchestrates the entire daily workflow:
+#1. Archive old articles (>24 hours) to the warehouse
+#2. Collect new articles from all 3 news APIs
+#3. Categorise new articles using sentence-transformers
+#4. Summarise new articles using Gemini Flash
+#Can be run manually or left running for automatic daily execution.
+
 
 from datetime import datetime, timezone
 import time
@@ -21,10 +20,10 @@ from summariser.gemini_summariser import summarise_all
 
 
 def daily_pipeline():
-    """
-    Run the complete daily pipeline.
-    This is the main function that gets called every 24 hours.
-    """
+ 
+    #Run the complete daily pipeline.
+    #This is the main function that gets called every 24 hours.
+ 
     start_time = time.time()
 
     print("\n" + "=" * 60)
@@ -32,9 +31,9 @@ def daily_pipeline():
     print(f"  {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
     print("=" * 60)
 
-    # ------------------------------------------------------------------
-    # Step 1: Archive old articles
-    # ------------------------------------------------------------------
+  
+    #Step 1: Archive old articles
+  
     print("\n[STEP 1/4] Archiving old articles...")
     print("-" * 40)
     try:
@@ -45,9 +44,9 @@ def daily_pipeline():
     except Exception as e:
         print(f"Archiving failed: {e}\n")
 
-    # ------------------------------------------------------------------
-    # Step 2: Collect new articles
-    # ------------------------------------------------------------------
+   
+    #Step 2: Collect new articles
+  
     print("[STEP 2/4] Collecting new articles...")
     print("-" * 40)
     try:
@@ -56,9 +55,9 @@ def daily_pipeline():
     except Exception as e:
         print(f"Collection failed: {e}\n")
 
-    # ------------------------------------------------------------------
-    # Step 3: Categorise articles
-    # ------------------------------------------------------------------
+
+    #Step 3: Categorise articles
+
     print("[STEP 3/4] Categorising articles...")
     print("-" * 40)
     try:
@@ -67,9 +66,9 @@ def daily_pipeline():
     except Exception as e:
         print(f"Categorisation failed: {e}\n")
 
-    # ------------------------------------------------------------------
-    # Step 4: Summarise articles
-    # ------------------------------------------------------------------
+  
+    #Step 4: Summarise articles
+
     print("[STEP 4/4] Summarising articles...")
     print("-" * 40)
     try:
@@ -78,9 +77,9 @@ def daily_pipeline():
     except Exception as e:
         print(f"Summarisation failed: {e}\n")
 
-    # ------------------------------------------------------------------
-    # Summary
-    # ------------------------------------------------------------------
+
+    #Summary
+  
     elapsed = round(time.time() - start_time, 1)
 
     print("=" * 60)
@@ -88,7 +87,7 @@ def daily_pipeline():
     print(f"  Time taken: {elapsed}s")
     print("=" * 60)
 
-    # Show current database stats
+    #Show current database stats
     try:
         db = DBClient()
         stats = db.get_daily_stats()
@@ -110,19 +109,19 @@ if __name__ == "__main__":
     import sys
 
     if len(sys.argv) > 1 and sys.argv[1] == "--once":
-        # Run once and exit: python main.py --once
+        #Run once and exit: python main.py --once
         print("Running pipeline once...\n")
         daily_pipeline()
     else:
-        # Run on a schedule: python main.py
+        #Run on a schedule: python main.py
         print("Starting scheduled pipeline...")
         print("Pipeline will run every 24 hours.")
         print("Press Ctrl+C to stop.\n")
 
-        # Run immediately on startup
+        #Run immediately on startup
         daily_pipeline()
 
-        # Then schedule to run every 24 hours
+        #Then schedule to run every 24 hours
         schedule.every(24).hours.do(daily_pipeline)
 
         while True:

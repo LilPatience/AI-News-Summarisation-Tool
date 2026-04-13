@@ -1,6 +1,6 @@
 # AI News Summarisation Tool
 
-An AI-powered news aggregation and summarisation system that collects articles from multiple news APIs, categorises them using NLP embeddings, and generates concise summaries using Google's Gemini AI. The summarised articles are served through a live web application.
+An AI-powered news summarisation system that collects articles from multiple news APIs, categorises them using NLP embeddings, and then generates a summary using Google's Gemini AI. The summarised articles are then shown on a live web application.
 
 **Live Demo:** [https://lilpatience.github.io/AI-News-Summarisation-Tool/](https://lilpatience.github.io/AI-News-Summarisation-Tool/)
 
@@ -29,7 +29,7 @@ The web application lets users select a topic and view the top 5 most recent sum
          └───────────┬───────────┘───────────────────────┘
                      │
               ┌──────▼──────┐
-              │   Collector  │  Fetch + Normalise + Deduplicate
+              │   Collector  │  Collect + Deduplicate
               └──────┬──────┘
                      │
               ┌──────▼──────┐
@@ -38,19 +38,19 @@ The web application lets users select a topic and view the top 5 most recent sum
                      │
          ┌───────────┴───────────┐
          │                       │
-  ┌──────▼──────┐        ┌──────▼──────┐
-  │ Categoriser  │        │ Summariser  │
-  │ (Embeddings) │        │  (Gemini)   │
-  └──────┬──────┘        └──────┬──────┘
+  ┌──────▼──────┐         ┌──────▼──────┐
+  │ Categoriser │         │ Summariser  │
+  │ (Embeddings)│         │  (Gemini)   │
+  └──────┬──────┘         └──────┬──────┘
          │                       │
          └───────────┬───────────┘
                      │
               ┌──────▼──────┐
-              │  Flask API   │  Hosted on Render
+              │  Flask API  │  Hosted on Render
               └──────┬──────┘
                      │
               ┌──────▼──────┐
-              │   Web App    │  Hosted on GitHub Pages
+              │   Web App   │  Hosted on GitHub Pages
               └─────────────┘
 ```
 
