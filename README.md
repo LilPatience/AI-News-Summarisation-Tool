@@ -155,19 +155,6 @@ python summariser/gemini_summariser.py
 
 ---
 
-## API Endpoints
-
-The Flask API is hosted at `https://ai-news-summarisation-tool.onrender.com`
-
-| Endpoint | Description |
-|----------|-------------|
-| `GET /` | Health check |
-| `GET /api/articles?category=Technology&limit=5` | Get articles by category |
-| `GET /api/categories` | List all categories with article counts |
-| `GET /api/stats` | Database statistics |
-
----
-
 ## Categories
 
 Articles are automatically classified into 8 predefined categories:
