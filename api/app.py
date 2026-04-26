@@ -102,6 +102,49 @@ def get_stats():
         "categorised": categorised
     })
 
+#Search for articles by keywords
+@app.route("/api/search")
+def search_articles():
+
+    query = request.args.get("q", "").strip()
+    limit = min(int(request.args.get("limit", 10)), 20)
+
+    if not query:
+        return jsonify({"error": "Please provide a search query (q parameter)"}), 400
+
+    try:
+        # Search across title, description, and summary using regex
+        search_filter = {
+            "$or": [
+                {"title": {"$regex": query, "$options": "i"}},
+                {"description": {"$regex": query, "$options": "i"}},
+                {"summary": {"$regex": query, "$options": "i"}}
+            ]
+        }
+
+        cursor = articles_collection.find(
+            search_filter,
+            {
+                "_id": 0,
+                "title": 1,
+                "summary": 1,
+                "url": 1,
+                "source": 1,
+                "published_at": 1,
+                "category": 1,
+            }
+        ).sort("published_at", -1).limit(limit)
+
+        articles = list(cursor)
+
+        return jsonify({
+            "query": query,
+            "count": len(articles),
+            "articles": articles
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

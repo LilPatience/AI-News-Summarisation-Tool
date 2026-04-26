@@ -155,7 +155,33 @@
             display: inline-flex; align-items: center; gap: 6px;
         }
         .article-link:hover { color: #e4e4e7; }
-
+        
+        .search-bar {
+            display: flex; gap: 8px; margin-top: 16px;
+        }
+        .search-input {
+            flex: 1; padding: 10px 20px; border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03); border-radius: 100px;
+            color: #e4e4e7; font-family: 'Syne', sans-serif; font-size: 14px;
+            font-weight: 500; outline: none; backdrop-filter: blur(10px);
+            letter-spacing: 0.02em; transition: all 0.3s ease;
+        }
+        .search-input::placeholder { color: #52525b; }
+        .search-input:focus {
+            border-color: rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.06);
+        }
+        .search-btn {
+            padding: 10px 24px; border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255,255,255,0.03); border-radius: 100px;
+            color: #a1a1aa; font-family: 'Syne', sans-serif; font-size: 14px;
+            font-weight: 500; cursor: pointer; transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        .search-btn:hover {
+            border-color: rgba(255,255,255,0.2); color: #e4e4e7;
+            background: rgba(255,255,255,0.06);
+        }
         .footer {
             border-top: 1px solid rgba(255,255,255,0.05); padding: 24px 0;
             text-align: center; font-size: 11px; color: #3f3f46; letter-spacing: 0.05em;
@@ -187,6 +213,10 @@
                 <div class="date-pill" id="datePill"></div>
             </div>
             <div class="categories" id="categories"></div>
+            <div class="search-bar">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search articles... e.g. war in Iran">
+                <button class="search-btn" id="searchBtn">Search</button>
+            </div>
         </header>
 
         <div class="header-rule"></div>
@@ -324,6 +354,72 @@
 
         // Update greeting every minute
         setInterval(updateGreeting, 60000);
+        // Search functionality
+        document.getElementById("searchBtn").addEventListener("click", () => {
+            const query = document.getElementById("searchInput").value.trim();
+            if (query) searchArticles(query);
+        });
+
+        document.getElementById("searchInput").addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+                const query = document.getElementById("searchInput").value.trim();
+                if (query) searchArticles(query);
+            }
+        });
+
+        async function searchArticles(query) {
+            // Clear active category buttons
+            selectedCategory = null;
+            document.querySelectorAll(".cat-btn").forEach(btn => {
+                btn.classList.remove("active");
+                btn.style.borderColor = "";
+                btn.style.background = "";
+                btn.style.boxShadow = "";
+            });
+
+            // Update glow orbs to purple for search
+            document.getElementById("glowTop").style.background = "#8b5cf6";
+            document.getElementById("glowBottom").style.background = "#8b5cf6";
+
+            // Show loading
+            const content = document.getElementById("content");
+            content.innerHTML = '<div class="loading"><div class="loader"></div></div>';
+
+            try {
+                const res = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(query)}&limit=10`);
+                if (!res.ok) throw new Error("Failed to fetch");
+                const data = await res.json();
+                const articles = data.articles || [];
+
+                if (articles.length === 0) {
+                    content.innerHTML = '<div class="error-state">No articles found for "' + query + '"</div>';
+                    return;
+                }
+
+                let html = `<div class="section-label">Search results for "${query}" — ${articles.length} articles</div>`;
+
+                articles.forEach((article, i) => {
+                    const delay = i * 0.08;
+                    html += `
+                        <div class="article-card" style="animation-delay: ${delay}s">
+                            <div class="article-num">${String(i + 1).padStart(2, "0")}</div>
+                            <div class="article-source">
+                                ${article.source || "Unknown source"} &middot; ${formatDate(article.published_at)}
+                                ${article.category ? ` &middot; ${article.category}` : ""}
+                            </div>
+                            <h2 class="article-title">${article.title || "Untitled"}</h2>
+                            ${article.summary ? `<p class="article-summary">${article.summary}</p>` : ""}
+                            ${article.url ? `<a class="article-link" href="${article.url}" target="_blank" rel="noopener noreferrer">Read original article &rarr;</a>` : ""}
+                        </div>
+                    `;
+                });
+
+                content.innerHTML = html;
+
+            } catch (err) {
+                content.innerHTML = '<div class="error-state">Could not connect to the API. Make sure the backend is running.</div>';
+            }
+        }
     </script>
 </body>
 </html>
