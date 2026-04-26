@@ -34,15 +34,15 @@ def daily_pipeline():
   
     #Step 1: Archive old articles
   
-    print("\n[STEP 1/4] Archiving old articles...")
-    print("-" * 40)
-    try:
-        db = DBClient()
-        archived_count = db.archive_old_articles()
-        db.close()
-        print(f"Result: {archived_count} articles archived.\n")
-    except Exception as e:
-        print(f"Archiving failed: {e}\n")
+    #print("\n[STEP 1/4] Archiving old articles...")
+    #print("-" * 40)
+    #try:
+    #    db = DBClient()
+    #    archived_count = db.archive_old_articles()
+    #    db.close()
+    #    print(f"Result: {archived_count} articles archived.\n")
+    #except Exception as e:
+    #    print(f"Archiving failed: {e}\n")
 
    
     #Step 2: Collect new articles
