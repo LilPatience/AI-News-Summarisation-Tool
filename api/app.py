@@ -16,6 +16,8 @@ MONGO_URI = os.getenv("MONGO_URI")
 client = MongoClient(MONGO_URI)
 db = client["news_data_raw"]
 articles_collection = db["articles"]
+warehouse_db = client["news_data_warehouse"]
+archived_collection = warehouse_db["archived_articles"]
 
 
 @app.route("/")
@@ -105,7 +107,6 @@ def get_stats():
 #Search for articles by keywords
 @app.route("/api/search")
 def search_articles():
-
     query = request.args.get("q", "").strip()
     limit = min(int(request.args.get("limit", 10)), 20)
 
@@ -113,7 +114,6 @@ def search_articles():
         return jsonify({"error": "Please provide a search query (q parameter)"}), 400
 
     try:
-        # Search across title, description, and summary using regex
         search_filter = {
             "$or": [
                 {"title": {"$regex": query, "$options": "i"}},
@@ -122,29 +122,27 @@ def search_articles():
             ]
         }
 
-        cursor = articles_collection.find(
-            search_filter,
-            {
-                "_id": 0,
-                "title": 1,
-                "summary": 1,
-                "url": 1,
-                "source": 1,
-                "published_at": 1,
-                "category": 1,
-            }
-        ).sort("published_at", -1).limit(limit)
+        fields = {
+            "_id": 0, "title": 1, "summary": 1, "url": 1,
+            "source": 1, "published_at": 1, "category": 1,
+        }
 
-        articles = list(cursor)
+        # Search both collections
+        daily = list(articles_collection.find(search_filter, fields).sort("published_at", -1).limit(limit))
+        archived = list(archived_collection.find(search_filter, fields).sort("published_at", -1).limit(limit))
+
+        # Combine and sort by date, take top results
+        all_articles = daily + archived
+        all_articles.sort(key=lambda x: x.get("published_at", ""), reverse=True)
+        all_articles = all_articles[:limit]
 
         return jsonify({
             "query": query,
-            "count": len(articles),
-            "articles": articles
+            "count": len(all_articles),
+            "articles": all_articles
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
