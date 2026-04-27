@@ -1,16 +1,3 @@
-"""
-evaluate.py - Testing and evaluation script for AI News Summariser
-
-Generates statistics and evaluation data for the FYP report.
-Run this after the pipeline has processed articles.
-
-Outputs:
-- Collection stats
-- Categorisation distribution and confidence scores
-- Summarisation coverage
-- Timing benchmarks
-- Sample outputs for the report
-"""
 
 import time
 import json
@@ -23,14 +10,12 @@ load_dotenv()
 
 
 def get_database_stats():
-    """Get overall database statistics."""
-    print("=" * 60)
+    #Get overall database statistics.
     print("  DATABASE STATISTICS")
-    print("=" * 60)
 
     db = DBClient()
 
-    # Daily collection stats
+    #Daily collection stats
     stats = db.get_daily_stats()
     print(f"\n  Daily Collection (news_data_raw):")
     print(f"    Total articles:    {stats['total_articles']}")
@@ -39,12 +24,12 @@ def get_database_stats():
     print(f"    Categorised:       {stats['categorised']}")
     print(f"    Uncategorised:     {stats['uncategorised']}")
 
-    # Warehouse stats
+    #Warehouse stats
     warehouse_count = db.archived_articles.count_documents({})
     print(f"\n  Warehouse (news_data_warehouse):")
     print(f"    Archived articles: {warehouse_count}")
 
-    # API source breakdown
+    #API source breakdown
     print(f"\n  Articles by API Source:")
     for source in ["newsapi", "gnews", "mediastack"]:
         count = db.articles.count_documents({"api_source": source})
@@ -55,10 +40,8 @@ def get_database_stats():
 
 
 def get_category_distribution():
-    """Get category distribution and confidence stats."""
-    print("\n" + "=" * 60)
+    #Get category distribution and confidence stats.
     print("  CATEGORISATION ANALYSIS")
-    print("=" * 60)
 
     db = DBClient()
     articles = db.get_all_articles()
@@ -100,10 +83,7 @@ def get_category_distribution():
 
 
 def get_summary_samples(n=5):
-    """Get sample summaries for the report."""
-    print("\n" + "=" * 60)
     print(f"  SAMPLE SUMMARIES (Top {n})")
-    print("=" * 60)
 
     db = DBClient()
     articles = list(db.articles.find(
@@ -124,11 +104,8 @@ def get_summary_samples(n=5):
 
 
 def benchmark_categoriser():
-    """Benchmark the categorisation speed."""
-    print("\n" + "=" * 60)
+    #Benchmark the categorisation speed.
     print("  CATEGORISATION BENCHMARK")
-    print("=" * 60)
-
     db = DBClient()
     articles = db.get_all_articles()
 
@@ -137,13 +114,13 @@ def benchmark_categoriser():
         db.close()
         return
 
-    # Time the model loading
+    #Time the model loading
     start = time.time()
     categoriser = ArticleCategoriser()
     load_time = time.time() - start
     print(f"\n  Model load time:       {load_time:.2f}s")
 
-    # Time the categorisation of all articles
+    #Time the categorisation of all articles
     start = time.time()
     for article in articles:
         categoriser.categorise_article(article)
@@ -165,10 +142,9 @@ def benchmark_categoriser():
 
 
 def check_deduplication_effectiveness():
-    """Check how many unique URLs vs total articles."""
-    print("\n" + "=" * 60)
+    #Check how many unique URLs vs total articles.
     print("  DEDUPLICATION CHECK")
-    print("=" * 60)
+
 
     db = DBClient()
     total = db.articles.count_documents({})
@@ -185,15 +161,7 @@ def check_deduplication_effectiveness():
 
 
 def evaluate_categorisation_accuracy():
-    """
-    Display articles with their assigned categories for manual review.
-    Prints a table you can use to manually check accuracy.
-    """
-    print("\n" + "=" * 60)
     print("  CATEGORISATION ACCURACY REVIEW")
-    print("  (Manually check if these categories are correct)")
-    print("=" * 60)
-
     db = DBClient()
     articles = list(db.articles.find(
         {"category": {"$exists": True, "$ne": ""}},
@@ -215,7 +183,6 @@ def evaluate_categorisation_accuracy():
 
 
 def run_full_evaluation():
-    """Run all evaluation steps."""
     print("\n" + "#" * 60)
     print("#  AI NEWS SUMMARISER - FULL EVALUATION")
     print(f"#  {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}")
